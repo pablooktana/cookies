@@ -81,12 +81,16 @@ Cookies.prototype.get = function(name, opts) {
 };
 
 Cookies.prototype.set = function(name, value, opts) {
+  var keys = this.keys;
+  if(opts.keys) {
+    keys = new Keygrip(opts.keys);
+  }
   var res = this.response
     , req = this.request
     , headers = res.getHeader("Set-Cookie") || []
     , secure = this.secure !== undefined ? !!this.secure : req.protocol === 'https' || req.connection.encrypted
     , cookie = new Cookie(name, value, opts)
-    , signed = opts && opts.signed !== undefined ? opts.signed : !!this.keys
+    , signed = opts && opts.signed !== undefined ? opts.signed : !!keys
 
   if (typeof headers == "string") headers = [headers]
 
@@ -105,8 +109,8 @@ Cookies.prototype.set = function(name, value, opts) {
   headers = pushCookie(headers, cookie)
 
   if (opts && signed) {
-    if (!this.keys) throw new Error('.keys required for signed cookies');
-    cookie.value = this.keys.sign(cookie.toString())
+    if (!keys) throw new Error('.keys required for signed cookies');
+    cookie.value = keys.sign(cookie.toString())
     cookie.name += ".sig"
     headers = pushCookie(headers, cookie)
   }
